@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/snowmerak/baseN/bitreader"
+	"github.com/snowmerak/baseN/bitwriter"
 )
 
 type Base struct {
@@ -99,4 +100,57 @@ func (e *Encoder) Encode() ([]byte, error) {
 	}
 
 	return res, nil
+}
+
+type Decoder struct {
+	base         *Base
+	writer       io.Writer
+	reverseIndex map[byte]int
+}
+
+func (b *Base) NewDecoder(writer io.Writer) *Decoder {
+	ri := make(map[byte]int, len(b.characterSet))
+	for i, c := range b.characterSet {
+		ri[c] = i
+	}
+
+	return &Decoder{
+		base:         b,
+		writer:       writer,
+		reverseIndex: ri,
+	}
+}
+
+func (d *Decoder) Decode(data []byte) ([]byte, error) {
+	writer := bitwriter.New()
+
+	paddingUsed := false
+	if len(d.base.characterSet) < 1<<d.base.unit {
+		paddingUsed = true
+	}
+
+	isPrevCharMax := false
+	for _, c := range data {
+		if _, ok := d.reverseIndex[c]; !ok {
+			return nil, fmt.Errorf("invalid character: %c", c)
+		}
+
+		if isPrevCharMax && paddingUsed && c == d.base.characterSet[0] {
+			continue
+		}
+
+		u := d.reverseIndex[c]
+		if u == len(d.base.characterSet)-1 && paddingUsed {
+			isPrevCharMax = true
+		} else {
+			isPrevCharMax = false
+		}
+
+		m := d.base.unit
+		for i := m - 1; i >= 0; i-- {
+			writer.WriteBit(u&(1<<uint(i)) != 0)
+		}
+	}
+
+	return writer.Bytes(), nil
 }
