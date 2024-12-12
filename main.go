@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	bs, err := base.New('?', '!')
+	bs, err := base.New("?!")
 	if err != nil {
 		panic(err)
 	}

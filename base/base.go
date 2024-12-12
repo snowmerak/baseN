@@ -22,7 +22,8 @@ func (e CharacterSetLengthIsNotValidErr) Error() string {
 	return fmt.Sprintf("character set length is not valid, expected: %d, actual: %d", e.Expected, e.Actual)
 }
 
-func New(charSet ...byte) (*Base, error) {
+func New(charSetParam string) (*Base, error) {
+	charSet := []byte(charSetParam)
 	unit := 1
 	for i := 0; i < 64; i++ {
 		if len(charSet) <= 1<<unit {
