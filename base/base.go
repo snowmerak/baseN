@@ -25,6 +25,12 @@ func (e CharacterSetLengthIsNotValidErr) Error() string {
 
 func New(charSetParam string) (*Base, error) {
 	charSet := []byte(charSetParam)
+	if len(charSet) < 2 {
+		return nil, CharacterSetLengthIsNotValidErr{
+			Expected: 2,
+			Actual:   len(charSet),
+		}
+	}
 	unit := 1
 	for i := 0; i < 64; i++ {
 		if len(charSet) <= 1<<unit {
