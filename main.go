@@ -13,7 +13,7 @@ func main() {
 		panic(err)
 	}
 
-	origin := []byte{0b10010010, 0b00100010, 0b10010011}
+	origin := []byte{0b11111000, 0b11111001, 0b11111110}
 
 	encoder := bs.NewEncoder(bytes.NewReader(origin))
 	res, err := encoder.Encode()
