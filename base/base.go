@@ -136,25 +136,34 @@ func (d *Decoder) Decode(data []byte) ([]byte, error) {
 	}
 
 	isPrevCharMax := false
+loop:
 	for _, c := range data {
-		if _, ok := d.reverseIndex[c]; !ok {
+		u, ok := d.reverseIndex[c]
+		if !ok {
 			return nil, fmt.Errorf("invalid character: %c", c)
 		}
+		v := uint64(u)
 
-		if isPrevCharMax && paddingUsed && c == d.base.characterSet[0] {
-			continue
+		switch isPrevCharMax {
+		case true:
+			if paddingUsed {
+				v += uint64(d.base.characterSet[len(d.base.characterSet)-1])
+			}
+		default:
 		}
 
-		u := d.reverseIndex[c]
 		if u == len(d.base.characterSet)-1 && paddingUsed {
 			isPrevCharMax = true
 		} else {
 			isPrevCharMax = false
 		}
 
-		m := d.base.unit
-		for i := m - 1; i >= 0; i-- {
-			writer.WriteBit(u&(1<<uint(i)) != 0)
+		if paddingUsed && isPrevCharMax {
+			continue loop
+		}
+
+		for i := d.base.unit - 1; i >= 0; i-- {
+			writer.WriteBit(v&(1<<uint(i)) != 0)
 		}
 	}
 
